@@ -127,7 +127,7 @@ const ORDER = REGISTRY.statuses.filter(s => s.group === "active").map(s => s.key
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
 function projectHref(p){
-  return encodeURI("./" + p.folder + "/" + p.file);
+  return REGISTRY.pagesUrl(p.repo);
 }
 
 function renderProjects(){

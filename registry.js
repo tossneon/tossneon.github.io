@@ -3,13 +3,19 @@
   작업실 허브(index.html, 사이트 루트 = 홈페이지)가 이 파일을 <script src>로 읽어서
   카드를 그린다. 즉, 프로젝트 상태가 바뀌면 "여기 한 곳"만 고치면 된다.
 
+  각 프로젝트는 독립된 GitHub 저장소 + GitHub Pages로 배포된다.
+  repo: "이름" 이면 실제 라이브 주소는 https://tossneon.github.io/이름/ 로 자동 계산됨
+  (허브 자신은 tossneon.github.io 저장소라 이 배열에 넣지 않는다).
+
   status 값은 아래 4단계 중 하나:
     "아이디어"    - 아직 목업도 없음 (보통은 ideas[] 배열에만 적어두면 충분)
     "프로토타입"  - 목업 만들어서 써보는 중, 계속할지 결정 전
     "발전중"      - 마음에 들어서 계속 키우는 중 (기능 추가, 실사용 등)
-    "히스토리"    - 써봤지만 계속 안 하기로 함 → 파일은 남기고 허브에는 기록으로만 표시
+    "히스토리"    - 써봤지만 계속 안 하기로 함 → 저장소는 그대로 두고 허브에는 기록으로만 표시
 */
+const GITHUB_USER = "tossneon";
 window.REGISTRY = {
+  pagesUrl: repo => `https://${GITHUB_USER}.github.io/${repo}/`,
   statuses: [
     { key: "발전중",   label: "발전중",     color: "#4C6FFF", group: "active" },
     { key: "프로토타입", label: "PROTOTYPE", color: "#6B7280", group: "active" },
@@ -21,8 +27,7 @@ window.REGISTRY = {
     {
       id: "checknote",
       title: "체크노트",
-      folder: "체크노트_실사용",
-      file: "checknote.html",
+      repo: "checknote",
       date: "2026.07",
       status: "발전중",
       tags: ["React", "PWA", "1:1 공유"],
@@ -32,8 +37,7 @@ window.REGISTRY = {
     {
       id: "dividend-passbook",
       title: "초간단 배당현황",
-      folder: "초간단 배당현황",
-      file: "dividend-passbook.html",
+      repo: "dividend-passbook",
       date: "2026.07",
       status: "프로토타입",
       tags: ["React", "투자", "세금계산"],
@@ -43,8 +47,7 @@ window.REGISTRY = {
     {
       id: "baby-place-registry",
       title: "아기랑 갈곳",
-      folder: "아기랑 갈곳",
-      file: "baby-place-registry.html",
+      repo: "baby-place-registry",
       date: "2026.07",
       status: "프로토타입",
       tags: ["React", "장소등록", "육아"],
@@ -54,8 +57,7 @@ window.REGISTRY = {
     {
       id: "kpc-coach-chat",
       title: "KPC 코칭챗봇",
-      folder: "KPC 코칭챗봇",
-      file: "kpc-coach-chat.html",
+      repo: "kpc-coach-chat",
       date: "2026.07",
       status: "프로토타입",
       tags: ["React", "코칭", "Gemini API"],
