@@ -59,12 +59,6 @@
   .memo-list { padding:0 12px 12px; display:flex; flex-direction:column; gap:6px; max-height:288px; overflow-y:auto; }
   .memo-item { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px; background:#F7F7F9; }
   .memo-item span { font-size:14px; color:#2A2B31; }
-  .memo-item button { background:none; border:none; cursor:pointer; color:#B7B8C0; font-size:13px; }
-  .memo-input-row { padding:4px 12px 12px; }
-  .memo-input-wrap { display:flex; align-items:center; gap:8px; border-radius:999px; padding:6px 6px 6px 16px; background:#F7F7F9; border:1px solid #ECECF0; }
-  .memo-input-wrap input { flex:1; border:none; outline:none; font-size:14px; padding:8px 0; color:#14151A; background:transparent; font-family:'Noto Sans KR',sans-serif; }
-  .memo-send { width:36px; height:36px; border-radius:999px; border:none; display:flex; align-items:center; justify-content:center; background:#DADBE0; color:#fff; cursor:pointer; flex-shrink:0; }
-  .memo-send.active { background:#4C6FFF; }
 
   .footer { padding:32px 24px; background:#0E0F13; }
   .footer .display { font-size:20px; color:#F5F5F7; margin:0; }
@@ -101,15 +95,9 @@
           <h3 class="display">아이디어 메모</h3>
           <span class="memo-count mono" id="idea-count">0개</span>
         </div>
-        <p class="memo-sub">다음에 만들지도 모르는 것들, 일단 여기 던져둠</p>
+        <p class="memo-sub">아직 목업 없는 것들. Notion "프로젝트 목록"에서 관리 — 여긴 읽기 전용</p>
       </div>
       <div class="memo-list" id="idea-list"></div>
-      <div class="memo-input-row">
-        <div class="memo-input-wrap">
-          <input id="idea-input" placeholder="새 아이디어 던지기" />
-          <button class="memo-send" id="idea-send">➤</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -132,9 +120,10 @@ function projectHref(p){
 
 function renderProjects(){
   const active = REGISTRY.projects
-    .filter(p => STATUS_MAP[p.status]?.group !== "history")
+    .filter(p => STATUS_MAP[p.status]?.group === "active")
     .sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status));
   const history = REGISTRY.projects.filter(p => STATUS_MAP[p.status]?.group === "history");
+  const ideas = REGISTRY.projects.filter(p => STATUS_MAP[p.status]?.group === "idea");
 
   document.getElementById("active-projects").innerHTML = active.map((p, i) => {
     const st = STATUS_MAP[p.status] || { label: p.status, color: "#6B7280" };
@@ -163,59 +152,18 @@ function renderProjects(){
     : `<p class="empty-hint">아직 없음. 접기로 한 프로젝트가 생기면 여기 쌓여요.</p>`;
 
   document.getElementById("hero-stats").innerHTML = `
-    <div><div class="num">${String(REGISTRY.projects.length).padStart(2,"0")}</div>PROJECTS</div>
-    <div><div class="num" id="stat-ideas">00</div>IDEAS</div>
+    <div><div class="num">${String(active.length).padStart(2,"0")}</div>PROJECTS</div>
+    <div><div class="num">${String(ideas.length).padStart(2,"0")}</div>IDEAS</div>
     <div><div class="num">'26</div>SINCE</div>`;
-  document.getElementById("hero-bignum").textContent = String(REGISTRY.projects.length).padStart(3, "0");
-}
+  document.getElementById("hero-bignum").textContent = String(active.length).padStart(3, "0");
 
-/* 아이디어 메모: registry.js의 ideas[]를 최초 시드로 쓰고, 이후엔 이 기기의 localStorage가 기준이 된다. */
-const IDEA_KEY = "maker_journal_ideas_v1";
-let ideas = loadIdeas();
-
-function loadIdeas(){
-  try {
-    const raw = localStorage.getItem(IDEA_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) { console.error("아이디어 불러오기 실패", e); }
-  return REGISTRY.ideas.map((t, i) => ({ id: i, text: t }));
-}
-function saveIdeas(){
-  try { localStorage.setItem(IDEA_KEY, JSON.stringify(ideas)); }
-  catch (e) { console.error("아이디어 저장 실패", e); }
-}
-function renderIdeas(){
-  const list = document.getElementById("idea-list");
   document.getElementById("idea-count").textContent = ideas.length + "개";
-  const statEl = document.getElementById("stat-ideas");
-  if (statEl) statEl.textContent = String(ideas.length).padStart(2, "0");
-  list.innerHTML = ideas.map(i => `
-    <div class="memo-item">
-      <span>${esc(i.text)}</span>
-      <button onclick="removeIdea(${i.id})">✕</button>
-    </div>`).join("");
+  document.getElementById("idea-list").innerHTML = ideas.length
+    ? ideas.map(p => `<div class="memo-item"><span>${esc(p.title)}</span></div>`).join("")
+    : `<p class="empty-hint">없음</p>`;
 }
-function removeIdea(id){ ideas = ideas.filter(i => i.id !== id); saveIdeas(); renderIdeas(); }
-function addIdea(){
-  const el = document.getElementById("idea-input");
-  const t = el.value.trim();
-  if (!t) return;
-  ideas.unshift({ id: Date.now(), text: t });
-  el.value = "";
-  saveIdeas();
-  renderIdeas();
-  updateSendBtn();
-}
-function updateSendBtn(){
-  const el = document.getElementById("idea-input");
-  document.getElementById("idea-send").classList.toggle("active", el.value.trim().length > 0);
-}
-document.getElementById("idea-send").addEventListener("click", addIdea);
-document.getElementById("idea-input").addEventListener("keydown", e => { if (e.key === "Enter") addIdea(); });
-document.getElementById("idea-input").addEventListener("input", updateSendBtn);
 
 renderProjects();
-renderIdeas();
 </script>
 </body>
 </html>

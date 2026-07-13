@@ -1,14 +1,16 @@
 /*
-  전체 프로젝트 단일 소스(Single Source of Truth).
-  작업실 허브(index.html, 사이트 루트 = 홈페이지)가 이 파일을 <script src>로 읽어서
-  카드를 그린다. 즉, 프로젝트 상태가 바뀌면 "여기 한 곳"만 고치면 된다.
+  이 파일은 Notion("작업실 허브" > "프로젝트 목록" 데이터베이스)에서 동기화되어 생성됨.
+  직접 손으로 고치지 말 것 — Notion에서 상태/설명 등을 바꾼 뒤 "노션 동기화해줘"라고
+  요청하면 Claude가 이 파일을 다시 생성해서 커밋한다.
+
+  허브(index.html, 사이트 루트 = 홈페이지)가 이 파일을 <script src>로 읽어서 카드를 그린다.
 
   각 프로젝트는 독립된 GitHub 저장소 + GitHub Pages로 배포된다.
   repo: "이름" 이면 실제 라이브 주소는 https://tossneon.github.io/이름/ 로 자동 계산됨
   (허브 자신은 tossneon.github.io 저장소라 이 배열에 넣지 않는다).
 
-  status 값은 아래 4단계 중 하나:
-    "아이디어"    - 아직 목업도 없음 (보통은 ideas[] 배열에만 적어두면 충분)
+  status 값은 아래 4단계 중 하나(Notion의 "상태" select 컬럼과 동일):
+    "아이디어"    - 아직 목업도 없음, repo 없음 — 허브에서는 카드가 아니라 짧은 메모 목록으로 표시
     "프로토타입"  - 목업 만들어서 써보는 중, 계속할지 결정 전
     "발전중"      - 마음에 들어서 계속 키우는 중 (기능 추가, 실사용 등)
     "히스토리"    - 써봤지만 계속 안 하기로 함 → 저장소는 그대로 두고 허브에는 기록으로만 표시
@@ -19,7 +21,7 @@ window.REGISTRY = {
   statuses: [
     { key: "발전중",   label: "발전중",     color: "#4C6FFF", group: "active" },
     { key: "프로토타입", label: "PROTOTYPE", color: "#6B7280", group: "active" },
-    { key: "아이디어",  label: "IDEA",       color: "#B98B4E", group: "active" },
+    { key: "아이디어",  label: "IDEA",       color: "#B98B4E", group: "idea" },
     { key: "히스토리",  label: "ARCHIVED",   color: "#A2A3AB", group: "history" }
   ],
 
@@ -63,17 +65,13 @@ window.REGISTRY = {
       tags: ["React", "코칭", "Gemini API"],
       description: "조언 대신 질문으로 스스로 답을 찾게 돕는 셀프코칭 대화 상대. ICF/KCA 역량 기반 시스템 프롬프트 설계는 끝났고, 대화 화면 프로토타입 단계.",
       note: "Gemini 무료 티어는 대화 내용이 학습에 쓰일 수 있음 — 코칭 대화 특성상 트레이드오프 주의"
-    }
-  ],
-
-  // 아직 목업도 안 만든 원시 아이디어. 허브에서 직접 추가/삭제 가능(이 기기에 저장됨).
-  ideas: [
-    "버크만진단 디브리핑 챗봇",
-    "모비노기 도감작 1000원",
-    "명언노트",
-    "짤저장소",
-    "자산관리",
-    "보험현황",
-    "사업계획"
+    },
+    { id: "burkman-debrief-chat", title: "버크만진단 디브리핑 챗봇", status: "아이디어" },
+    { id: "mobinogi-dex-1000",     title: "모비노기 도감작 1000원",  status: "아이디어" },
+    { id: "quote-notes",           title: "명언노트",               status: "아이디어" },
+    { id: "meme-storage",          title: "짤저장소",               status: "아이디어" },
+    { id: "asset-management",      title: "자산관리",               status: "아이디어" },
+    { id: "insurance-overview",    title: "보험현황",               status: "아이디어" },
+    { id: "business-plan",         title: "사업계획",               status: "아이디어" }
   ]
 };
