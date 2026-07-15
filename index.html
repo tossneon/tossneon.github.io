@@ -73,6 +73,7 @@
   .satbtn:disabled { cursor:default; opacity:.7; }
   .delrow { display:flex; justify-content:flex-end; margin-top:8px; }
   .delbtn { background:none; border:none; cursor:pointer; font-size:10px; color:#C9BEAE; }
+  .delbtn.confirm { color:#fff; background:#E0574C; padding:5px 10px; border-radius:8px; font-weight:500; font-size:11px; }
 
   .footnote { margin:0 20px 32px; border-radius:12px; padding:14px; background:#F3E7D9; color:#8C8378; font-size:11px; line-height:1.6; }
 
@@ -416,6 +417,20 @@ function removePlace(id){
   renderMarkers();
   persist();
 }
+let pendingDeleteId = null;
+let pendingDeleteTimer = null;
+function requestDelete(id){
+  if(isSharedView) return;
+  clearTimeout(pendingDeleteTimer);
+  if(pendingDeleteId === id){
+    pendingDeleteId = null;
+    removePlace(id);
+    return;
+  }
+  pendingDeleteId = id;
+  pendingDeleteTimer = setTimeout(() => { pendingDeleteId = null; renderList(); }, 3000);
+  renderList();
+}
 function setLocationFor(id){
   if(isSharedView) return;
   const p = places.find(x => x.id===id);
@@ -466,7 +481,7 @@ function renderList(){
           <button class="starbtn" ${isSharedView ? "disabled" : `onclick="event.stopPropagation(); toggleFav(${p.id})"`}>${p.favorite ? "⭐" : "☆"}</button>
         </div>
         <div class="satrow">${SATISFACTIONS.map(s => `<button class="satbtn ${p.satisfaction===s.key?'active':''}" ${isSharedView?'disabled':''} style="${p.satisfaction===s.key?`background:${s.color};color:#fff;border-color:${s.color};`:''}" ${isSharedView?'':`onclick="event.stopPropagation(); setSatisfaction(${p.id}, '${s.key}')"`}>${s.emoji} ${s.key}</button>`).join("")}</div>
-        ${isSharedView ? "" : `<div class="delrow"><button class="delbtn" onclick="event.stopPropagation(); removePlace(${p.id})">삭제</button></div>`}
+        ${isSharedView ? "" : `<div class="delrow"><button class="delbtn ${pendingDeleteId===p.id?'confirm':''}" onclick="event.stopPropagation(); requestDelete(${p.id})">${pendingDeleteId===p.id ? "정말 삭제할까요? 다시 탭" : "삭제"}</button></div>`}
       </div>`;
   }).join("");
 }
