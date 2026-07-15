@@ -415,7 +415,8 @@ function renderMarkers(){
   if(!mapReady) return;
   markerOverlays.forEach(o => o.setMap(null));
   markerOverlays = [];
-  visiblePlaces().filter(hasLoc).forEach(p => {
+  const located = visiblePlaces().filter(hasLoc);
+  located.forEach(p => {
     const el = createMarkerEl(p);
     const overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -425,6 +426,18 @@ function renderMarkers(){
     overlay.setMap(map);
     markerOverlays.push(overlay);
   });
+  fitToMarkers(located);
+}
+function fitToMarkers(located){
+  if(located.length === 0) return;
+  if(located.length === 1){
+    map.setLevel(4);
+    map.panTo(new kakao.maps.LatLng(located[0].lat, located[0].lng));
+    return;
+  }
+  const bounds = new kakao.maps.LatLngBounds();
+  located.forEach(p => bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)));
+  map.setBounds(bounds);
 }
 function focusPlace(id){
   const p = places.find(x => x.id===id);
