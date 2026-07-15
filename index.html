@@ -28,11 +28,19 @@
   .quickadd button { width:36px; height:36px; border-radius:999px; border:none; display:flex; align-items:center; justify-content:center; background:#EDE0D2; color:#fff; cursor:pointer; flex-shrink:0; font-size:16px; }
   .quickadd button.active { background:#FF7B54; }
 
+  #search-results { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+  .searchitem { padding:10px 12px; border-radius:10px; background:#fff; border:1px solid #EDE0D2; cursor:pointer; }
+  .searchitem b { display:block; font-size:13px; color:#3B2E2A; font-weight:500; }
+  .searchitem span { display:block; font-size:11px; color:#A8998C; margin-top:2px; }
+  .searchempty { font-size:11px; color:#C9BEAE; text-align:center; padding:10px 0; }
+  .manuallink { display:block; width:100%; text-align:center; background:none; border:none; color:#A8998C; font-size:11px; cursor:pointer; padding:10px 0 0; text-decoration:underline; }
+
   .draft { border-radius:16px; padding:16px; background:#fff; border:1px solid #EDE0D2; }
   .draft-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .draft-src { display:flex; align-items:center; gap:6px; font-size:11px; color:#A8998C; }
   .draft-top button { background:none; border:none; cursor:pointer; color:#A8998C; font-size:14px; }
   .draft input.name { width:100%; font-size:14px; font-weight:500; border-radius:8px; padding:8px 12px; margin-bottom:10px; border:1px solid #EDE0D2; background:#FDF9F4; color:#3B2E2A; box-sizing:border-box; }
+  .draft-addr { font-size:11px; color:#A8998C; margin:-6px 0 10px 2px; }
   .draft label { font-size:11px; color:#A8998C; margin-bottom:6px; display:block; }
   .chiprow { display:flex; gap:6px; margin-bottom:12px; }
   .chip { flex:1; padding:6px; border-radius:8px; font-size:11px; font-weight:500; border:1px solid #EDE0D2; background:#FDF9F4; color:#8C8378; cursor:pointer; text-align:center; }
@@ -55,11 +63,14 @@
   .pcard-top { display:flex; align-items:flex-start; justify-content:space-between; }
   .pcard-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:999px; color:#fff; }
-  .aud { font-size:10px; font-weight:500; }
   .noloc { font-size:10px; font-weight:500; color:#FF7B54; }
   .pname { font-size:14px; font-weight:500; margin-top:6px; color:#3B2E2A; }
+  .paddr { font-size:11px; margin-top:2px; color:#B98B4E; }
   .pmemo { font-size:12px; margin-top:4px; line-height:1.5; color:#A8998C; }
   .starbtn { background:none; border:none; cursor:pointer; font-size:16px; }
+  .satrow { display:flex; gap:6px; margin-top:10px; }
+  .satbtn { flex:1; padding:6px; border-radius:8px; font-size:11px; font-weight:500; border:1px solid #EDE0D2; background:#FDF9F4; color:#8C8378; cursor:pointer; }
+  .satbtn:disabled { cursor:default; opacity:.7; }
   .delrow { display:flex; justify-content:flex-end; margin-top:8px; }
   .delbtn { background:none; border:none; cursor:pointer; font-size:10px; color:#C9BEAE; }
 
@@ -93,7 +104,7 @@
       <button class="sharebtn" id="share-btn">🔗 공유</button>
     </div>
     <h1 class="display">아기랑 갈 곳</h1>
-    <p class="sub">링크나 상호명을 붙여넣으면 바로 등록돼요</p>
+    <p class="sub">상호명을 검색하면 바로 등록돼요</p>
   </div>
 
   <div id="banner"></div>
@@ -133,25 +144,32 @@ const TYPES = [
   { key:"카페", color:"#B98B4E", icon:"☕" },
   { key:"기타", color:"#8C8378", icon:"📍" },
 ];
-const AUDIENCES = [
-  { key:"아기전용", icon:"👶", color:"#FF7B54" },
-  { key:"전연령", icon:"👨‍👩‍👧", color:"#3AAFA9" },
-  { key:"어른동반", icon:"🧑", color:"#8C8378" },
+const SATISFACTIONS = [
+  { key:"최고", emoji:"😍", color:"#3AAFA9" },
+  { key:"무난", emoji:"🙂", color:"#B98B4E" },
+  { key:"별로", emoji:"😕", color:"#8C8378" },
 ];
 const SEOUL_CITY_HALL = { lat:37.5665, lng:126.9780 };
 
 const STORAGE_KEY = "baby-place-registry:places";
 let idSeq = 10;
 let places = [
-  { id:1, raw:"https://map.kakao.com/xxxxx", source:"link", name:"몽실놀이터", type:"놀곳", audience:"전연령", memo:"실내라 비 와도 좋음, 주차 넉넉", favorite:true, lat:37.5665, lng:126.9780 },
-  { id:2, raw:"우리동네 국수집", source:"text", name:"우리동네 국수집", type:"먹을곳", audience:"아기전용", memo:"유아의자 있음, 이유식 데워줌", favorite:false, lat:37.5651, lng:126.9895 },
-  { id:3, raw:"https://place.map.naver.com/yyyyy", source:"link", name:"라운드어바웃 카페", type:"카페", audience:"어른동반", memo:"아기의자는 없고 유모차 자리 넓음", favorite:false, lat:37.5600, lng:126.9700 },
+  { id:1, raw:"https://map.kakao.com/xxxxx", source:"link", name:"몽실놀이터", type:"놀곳", memo:"실내라 비 와도 좋음, 주차 넉넉", favorite:true, lat:37.5665, lng:126.9780, satisfaction:"최고" },
+  { id:2, raw:"우리동네 국수집", source:"text", name:"우리동네 국수집", type:"먹을곳", memo:"이유식 데워줌", favorite:false, lat:37.5651, lng:126.9895 },
+  { id:3, raw:"https://place.map.naver.com/yyyyy", source:"link", name:"라운드어바웃 카페", type:"카페", memo:"유모차 자리 넓음", favorite:false, lat:37.5600, lng:126.9700 },
 ];
 let draft = null;
 let rawInput = "";
 let filterType = "전체";
 let favOnly = false;
 let isSharedView = false;
+
+let addMode = "search"; // "search" | "manual" — !mapReady일 땐 항상 manual로 폴백
+let searchQuery = "";
+let searchResults = [];
+let searchDone = false;
+let searchDebounceTimer = null;
+let placesService = null;
 
 function nextIdSeq(){ return places.reduce((m,p) => Math.max(m, p.id||0), 0) + 1; }
 
@@ -217,7 +235,7 @@ function renderFootnote(){
   const el = document.getElementById("footnote");
   el.textContent = mapReady
     ? "지도에 핀이 없는 장소는 목록에서 카드를 탭하면 위치를 지정할 수 있어요."
-    : "지금은 카카오맵 키가 아직 등록되지 않아서 지도가 비어있어요. 등록·분류·메모·즐겨찾기·공유는 그대로 사용할 수 있어요.";
+    : "지금은 카카오맵 키가 아직 등록되지 않아서 지도와 상호명 검색이 비어있어요. 등록·분류·메모·즐겨찾기·공유는 그대로 사용할 수 있어요.";
 }
 
 function renderAll(){ renderBanner(); renderFootnote(); renderAdd(); renderFilters(); renderList(); renderMarkers(); }
@@ -237,56 +255,134 @@ function visiblePlaces(){
 }
 function hasLoc(p){ return Number.isFinite(p.lat) && Number.isFinite(p.lng); }
 
+/* ---- 등록: 상호명 검색이 기본, 직접입력은 폴백 ---- */
 function renderAdd(){
   const el = document.getElementById("addwrap");
   if(isSharedView){ el.innerHTML = ""; return; }
-  if(!draft){
-    el.innerHTML = `
-      <div class="quickadd">
-        <input id="raw-input" placeholder="링크, 주소, 상호명 붙여넣기" value="${esc(rawInput)}" />
-        <button id="start-btn">＋</button>
-      </div>`;
-    const input = document.getElementById("raw-input");
-    input.addEventListener("input", e => { rawInput = e.target.value; document.getElementById("start-btn").classList.toggle("active", rawInput.trim().length>0); });
-    input.addEventListener("keydown", e => { if(e.key==="Enter") startRegister(); });
-    document.getElementById("start-btn").addEventListener("click", startRegister);
-  } else {
-    el.innerHTML = `
-      <div class="draft">
-        <div class="draft-top">
-          <span class="draft-src">${draft.source==="link" ? "🔗 링크에서 등록" : "📍 직접 입력"}</span>
-          <button id="cancel-btn">✕</button>
-        </div>
-        <input class="name" id="draft-name" value="${esc(draft.name)}" placeholder="장소 이름" />
-        <label>유형</label>
-        <div class="chiprow" id="type-row"></div>
-        <label>대상</label>
-        <div class="chiprow" id="aud-row"></div>
-        <textarea id="draft-memo" rows="2" placeholder="메모 (유아의자 있는지, 주차 등)">${esc(draft.memo)}</textarea>
-        <button type="button" class="locbtn ${draft.lat!=null ? 'set' : ''}" id="loc-btn">${draft.lat!=null ? "📍 위치 수정" : "📍 위치 설정"}</button>
-        <button class="save" id="save-btn">등록하기</button>
-      </div>`;
-    document.getElementById("draft-name").addEventListener("input", e => draft.name = e.target.value);
-    document.getElementById("draft-memo").addEventListener("input", e => draft.memo = e.target.value);
-    document.getElementById("cancel-btn").addEventListener("click", () => { draft = null; renderAdd(); });
-    document.getElementById("save-btn").addEventListener("click", confirmRegister);
-    document.getElementById("loc-btn").addEventListener("click", () => {
-      openPicker(draft.lat!=null ? { lat:draft.lat, lng:draft.lng } : null, loc => { draft.lat = loc.lat; draft.lng = loc.lng; renderAdd(); });
-    });
+  if(draft){ renderDraftForm(el); return; }
+  if(mapReady && addMode === "search"){ renderSearchBox(el); return; }
+  renderManualBox(el);
+}
 
-    document.getElementById("type-row").innerHTML = TYPES.map(t => `<div class="chip ${draft.type===t.key?'active':''}" data-t="${t.key}" style="${draft.type===t.key?`background:${t.color};`:''}">${t.key}</div>`).join("");
-    document.querySelectorAll("#type-row .chip").forEach(chip => chip.addEventListener("click", () => { draft.type = chip.dataset.t; renderAdd(); }));
-
-    document.getElementById("aud-row").innerHTML = AUDIENCES.map(a => `<div class="chip ${draft.audience===a.key?'active':''}" data-a="${a.key}" style="${draft.audience===a.key?`background:${a.color};`:''}">${a.icon} ${a.key}</div>`).join("");
-    document.querySelectorAll("#aud-row .chip").forEach(chip => chip.addEventListener("click", () => { draft.audience = chip.dataset.a; renderAdd(); }));
+function renderManualBox(el){
+  el.innerHTML = `
+    <div class="quickadd">
+      <input id="raw-input" placeholder="링크, 주소, 상호명 붙여넣기" value="${esc(rawInput)}" />
+      <button id="start-btn">＋</button>
+    </div>
+    ${mapReady ? `<button type="button" class="manuallink" id="to-search-btn">🔍 상호명 검색으로</button>` : ""}`;
+  const input = document.getElementById("raw-input");
+  input.addEventListener("input", e => { rawInput = e.target.value; document.getElementById("start-btn").classList.toggle("active", rawInput.trim().length>0); });
+  input.addEventListener("keydown", e => { if(e.key==="Enter") startRegister(); });
+  document.getElementById("start-btn").addEventListener("click", startRegister);
+  if(mapReady){
+    document.getElementById("to-search-btn").addEventListener("click", () => { addMode = "search"; searchQuery = ""; searchResults = []; searchDone = false; renderAdd(); });
   }
+}
+
+function renderSearchBox(el){
+  el.innerHTML = `
+    <div class="quickadd">
+      <input id="search-input" placeholder="상호명으로 검색 (예: OO키즈카페)" value="${esc(searchQuery)}" />
+      <button id="search-btn">🔍</button>
+    </div>
+    <div id="search-results"></div>
+    <button type="button" class="manuallink" id="to-manual-btn">✏️ 직접 입력할래요</button>`;
+  const input = document.getElementById("search-input");
+  input.addEventListener("input", e => { searchQuery = e.target.value; onSearchInput(searchQuery); });
+  input.addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); clearTimeout(searchDebounceTimer); runSearch(searchQuery.trim()); } });
+  document.getElementById("search-btn").addEventListener("click", () => { clearTimeout(searchDebounceTimer); runSearch(searchQuery.trim()); });
+  document.getElementById("to-manual-btn").addEventListener("click", () => { addMode = "manual"; renderAdd(); });
+  renderSearchResults();
+}
+
+function renderSearchResults(){
+  const el = document.getElementById("search-results");
+  if(!el) return;
+  if(searchResults.length){
+    el.innerHTML = searchResults.map((r,i) => `
+      <div class="searchitem" data-i="${i}">
+        <b>${esc(r.place_name)}</b>
+        <span>${esc(r.road_address_name || r.address_name || "")}</span>
+      </div>`).join("");
+    el.querySelectorAll(".searchitem").forEach(item => item.addEventListener("click", () => pickSearchResult(searchResults[Number(item.dataset.i)])));
+  } else if(searchDone && searchQuery.trim()){
+    el.innerHTML = `<div class="searchempty">검색 결과가 없어요. 직접 입력해보세요.</div>`;
+  } else {
+    el.innerHTML = "";
+  }
+}
+
+function onSearchInput(v){
+  clearTimeout(searchDebounceTimer);
+  searchDone = false;
+  if(!v.trim()){ searchResults = []; renderSearchResults(); return; }
+  searchDebounceTimer = setTimeout(() => runSearch(v.trim()), 350);
+}
+
+function runSearch(query){
+  if(!query || !placesService) return;
+  const opts = mapReady ? { location: map.getCenter() } : {};
+  placesService.keywordSearch(query, (data, status) => {
+    searchDone = true;
+    searchResults = status === kakao.maps.services.Status.OK ? data.slice(0,6) : [];
+    renderSearchResults();
+  }, opts);
+}
+
+function pickSearchResult(item){
+  draft = {
+    raw: item.place_name,
+    source: "search",
+    name: item.place_name,
+    address: item.road_address_name || item.address_name || "",
+    type: "놀곳",
+    memo: "",
+    lat: parseFloat(item.y),
+    lng: parseFloat(item.x)
+  };
+  searchQuery = ""; searchResults = []; searchDone = false;
+  renderAdd();
+}
+
+function draftSourceLabel(){
+  if(draft.source==="search") return "🔍 검색해서 등록";
+  if(draft.source==="link") return "🔗 링크에서 등록";
+  return "✏️ 직접 입력";
+}
+
+function renderDraftForm(el){
+  el.innerHTML = `
+    <div class="draft">
+      <div class="draft-top">
+        <span class="draft-src">${draftSourceLabel()}</span>
+        <button id="cancel-btn">✕</button>
+      </div>
+      <input class="name" id="draft-name" value="${esc(draft.name)}" placeholder="장소 이름" />
+      ${draft.address ? `<div class="draft-addr">${esc(draft.address)}</div>` : ""}
+      <label>유형</label>
+      <div class="chiprow" id="type-row"></div>
+      <textarea id="draft-memo" rows="2" placeholder="메모 (주차 등)">${esc(draft.memo)}</textarea>
+      <button type="button" class="locbtn ${hasLoc(draft) ? 'set' : ''}" id="loc-btn">${hasLoc(draft) ? "📍 위치 수정" : "📍 위치 설정"}</button>
+      <button class="save" id="save-btn">등록하기</button>
+    </div>`;
+  document.getElementById("draft-name").addEventListener("input", e => draft.name = e.target.value);
+  document.getElementById("draft-memo").addEventListener("input", e => draft.memo = e.target.value);
+  document.getElementById("cancel-btn").addEventListener("click", () => { draft = null; renderAdd(); });
+  document.getElementById("save-btn").addEventListener("click", confirmRegister);
+  document.getElementById("loc-btn").addEventListener("click", () => {
+    openPicker(hasLoc(draft) ? { lat:draft.lat, lng:draft.lng } : null, loc => { draft.lat = loc.lat; draft.lng = loc.lng; renderAdd(); });
+  });
+
+  document.getElementById("type-row").innerHTML = TYPES.map(t => `<div class="chip ${draft.type===t.key?'active':''}" data-t="${t.key}" style="${draft.type===t.key?`background:${t.color};`:''}">${t.key}</div>`).join("");
+  document.querySelectorAll("#type-row .chip").forEach(chip => chip.addEventListener("click", () => { draft.type = chip.dataset.t; renderAdd(); }));
 }
 
 function startRegister(){
   const raw = rawInput.trim();
   if(!raw) return;
   const center = mapReady ? currentMapCenter() : null;
-  draft = { raw, source: detectSource(raw), name: guessName(raw), type:"놀곳", audience:"전연령", memo:"", lat: center ? center.lat : undefined, lng: center ? center.lng : undefined };
+  draft = { raw, source: detectSource(raw), name: guessName(raw), type:"놀곳", memo:"", lat: center ? center.lat : undefined, lng: center ? center.lng : undefined };
   rawInput = "";
   renderAdd();
 }
@@ -302,6 +398,12 @@ function confirmRegister(){
 function toggleFav(id){
   if(isSharedView) return;
   places = places.map(p => p.id===id ? {...p, favorite: !p.favorite} : p);
+  renderList();
+  persist();
+}
+function setSatisfaction(id, key){
+  if(isSharedView) return;
+  places = places.map(p => p.id===id ? {...p, satisfaction: p.satisfaction===key ? null : key} : p);
   renderList();
   persist();
 }
@@ -344,23 +446,24 @@ function renderList(){
   if(visible.length===0){ el.innerHTML = `<div class="empty">등록된 장소가 없어요.</div>`; return; }
   el.innerHTML = visible.map(p => {
     const typeInfo = TYPES.find(t=>t.key===p.type);
-    const audInfo = AUDIENCES.find(a=>a.key===p.audience);
     const located = hasLoc(p);
+    const sourceIcon = p.source==="search" ? "🔍" : p.source==="link" ? "🔗" : "";
     return `
       <div class="pcard" data-id="${p.id}" onclick="onCardClick(${p.id})">
         <div class="pcard-top">
           <div>
             <div class="pcard-meta">
               <span class="badge" style="background:${typeInfo?.color}">${esc(p.type)}</span>
-              ${audInfo ? `<span class="aud" style="color:${audInfo.color}">${audInfo.icon} ${audInfo.key}</span>` : ""}
-              ${p.source==="link" ? `<span style="font-size:10px;color:#C9BEAE;">🔗</span>` : ""}
+              ${sourceIcon ? `<span style="font-size:10px;color:#C9BEAE;">${sourceIcon}</span>` : ""}
               ${!located && !isSharedView ? `<span class="noloc">📍 위치 미지정 · 탭해서 설정</span>` : ""}
             </div>
             <div class="pname">${esc(p.name)}</div>
+            ${p.address ? `<div class="paddr">${esc(p.address)}</div>` : ""}
             ${p.memo ? `<div class="pmemo">${esc(p.memo)}</div>` : ""}
           </div>
           <button class="starbtn" ${isSharedView ? "disabled" : `onclick="event.stopPropagation(); toggleFav(${p.id})"`}>${p.favorite ? "⭐" : "☆"}</button>
         </div>
+        <div class="satrow">${SATISFACTIONS.map(s => `<button class="satbtn ${p.satisfaction===s.key?'active':''}" ${isSharedView?'disabled':''} style="${p.satisfaction===s.key?`background:${s.color};color:#fff;border-color:${s.color};`:''}" ${isSharedView?'':`onclick="event.stopPropagation(); setSatisfaction(${p.id}, '${s.key}')"`}>${s.emoji} ${s.key}</button>`).join("")}</div>
         ${isSharedView ? "" : `<div class="delrow"><button class="delbtn" onclick="event.stopPropagation(); removePlace(${p.id})">삭제</button></div>`}
       </div>`;
   }).join("");
@@ -397,9 +500,11 @@ function renderMapPlaceholder(loadError){
 function initMap(){
   const center = defaultCenter();
   map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(center.lat, center.lng), level: 6 });
+  placesService = new kakao.maps.services.Places();
   mapReady = true;
   renderFootnote();
   renderMarkers();
+  if(!draft && !rawInput.trim()){ renderAdd(); }
 }
 function createMarkerEl(place){
   const typeInfo = TYPES.find(t => t.key===place.type) || TYPES[TYPES.length-1];
