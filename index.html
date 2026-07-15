@@ -482,8 +482,8 @@ let draftPreviewOverlay = null;
 function showDraftPreview(){
   if(!mapReady || !draft || !hasLoc(draft)) return;
   clearDraftPreview();
-  map.setLevel(4);
   map.panTo(new kakao.maps.LatLng(draft.lat, draft.lng));
+  map.setLevel(4);
   const el = document.createElement("div");
   el.className = "pin";
   el.style.background = "#3B2E2A";
@@ -559,8 +559,8 @@ function renderMarkers(){
 function fitToMarkers(located){
   if(located.length === 0) return;
   if(located.length === 1){
-    map.setLevel(4);
     map.panTo(new kakao.maps.LatLng(located[0].lat, located[0].lng));
+    map.setLevel(4);
     return;
   }
   const bounds = new kakao.maps.LatLngBounds();
@@ -571,8 +571,8 @@ function focusPlace(id){
   const p = places.find(x => x.id===id);
   if(!p || !hasLoc(p)) return;
   if(mapReady){
-    map.setLevel(4);
     map.panTo(new kakao.maps.LatLng(p.lat, p.lng));
+    map.setLevel(4);
   }
   const card = document.querySelector(`.pcard[data-id="${id}"]`);
   if(card){
