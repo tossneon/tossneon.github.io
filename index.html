@@ -10,12 +10,17 @@
   body { margin:0; background:#EFE4D8; font-family:'Noto Sans KR',sans-serif; display:flex; justify-content:center; }
   .display { font-family:'Gowun Dodum', sans-serif; }
   .mono { font-family:'IBM Plex Mono', monospace; }
-  .app { width:100%; max-width:420px; min-height:100vh; background:#FDF4EC; box-shadow:0 0 40px rgba(0,0,0,0.06); }
+  .app { width:100%; max-width:420px; min-height:100vh; background:#FDF4EC; box-shadow:0 0 40px rgba(0,0,0,0.06); position:relative; }
   .header { padding:32px 20px 16px; }
   .header .taghead { display:flex; align-items:center; gap:6px; }
   .header .tag { font-size:10px; letter-spacing:.2em; color:#FF7B54; margin:0; }
   .header h1 { font-size:24px; margin:4px 0 0; color:#3B2E2A; }
   .header p.sub { font-size:12px; margin:4px 0 0; color:#A8998C; }
+
+  .map-wrap { position:relative; margin:0 20px 16px; border-radius:16px; overflow:hidden; border:1px solid #EDE0D2; height:260px; background:#EFE4D8; }
+  #map { width:100%; height:100%; }
+  .map-placeholder { height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px; font-size:12px; line-height:1.7; color:#A8998C; }
+  .locate-btn { position:absolute; right:10px; bottom:10px; width:36px; height:36px; border-radius:999px; border:1px solid #EDE0D2; background:#fff; cursor:pointer; font-size:15px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
 
   .addwrap { padding:0 20px; }
   .quickadd { display:flex; align-items:center; gap:8px; border-radius:999px; padding:6px 6px 6px 16px; background:#fff; border:1px solid #EDE0D2; }
@@ -33,6 +38,8 @@
   .chip { flex:1; padding:6px; border-radius:8px; font-size:11px; font-weight:500; border:1px solid #EDE0D2; background:#FDF9F4; color:#8C8378; cursor:pointer; text-align:center; }
   .chip.active { color:#fff; border:none; }
   .draft textarea { width:100%; font-size:14px; border-radius:8px; padding:8px 12px; margin-bottom:12px; border:1px solid #EDE0D2; background:#FDF9F4; color:#3B2E2A; resize:none; box-sizing:border-box; font-family:'Noto Sans KR',sans-serif; }
+  .locbtn { width:100%; padding:9px; border-radius:8px; border:1px dashed #FFB69A; background:#FFF6F1; color:#FF7B54; font-size:12px; font-weight:500; cursor:pointer; margin-bottom:12px; }
+  .locbtn.set { border-style:solid; border-color:#EDE0D2; background:#FDF9F4; color:#8C8378; }
   .draft .save { width:100%; padding:10px; border-radius:12px; border:none; background:#3B2E2A; color:#FDF4EC; font-size:14px; font-weight:500; cursor:pointer; }
 
   .filters { padding:20px 20px 0; display:flex; align-items:center; gap:6px; overflow-x:auto; }
@@ -43,11 +50,13 @@
 
   .list { padding:16px 20px 40px; display:flex; flex-direction:column; gap:10px; }
   .empty { text-align:center; font-size:12px; color:#C9BEAE; padding:40px 0; }
-  .pcard { border-radius:16px; padding:14px 16px; background:#fff; border:1px solid #EDE0D2; }
+  .pcard { border-radius:16px; padding:14px 16px; background:#fff; border:1px solid #EDE0D2; cursor:pointer; transition:box-shadow .3s, border-color .3s; }
+  .pcard.highlight { border-color:#FF7B54; box-shadow:0 0 0 3px rgba(255,123,84,0.18); }
   .pcard-top { display:flex; align-items:flex-start; justify-content:space-between; }
-  .pcard-meta { display:flex; align-items:center; gap:6px; }
+  .pcard-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:999px; color:#fff; }
   .aud { font-size:10px; font-weight:500; }
+  .noloc { font-size:10px; font-weight:500; color:#FF7B54; }
   .pname { font-size:14px; font-weight:500; margin-top:6px; color:#3B2E2A; }
   .pmemo { font-size:12px; margin-top:4px; line-height:1.5; color:#A8998C; }
   .starbtn { background:none; border:none; cursor:pointer; font-size:16px; }
@@ -60,6 +69,20 @@
   .sharebanner { margin:0 20px 16px; border-radius:12px; padding:12px 14px; background:#FFF3E0; border:1px solid #FFD9C7; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .sharebanner p { margin:0; font-size:11px; color:#8C6A4E; line-height:1.5; }
   .sharebanner button { flex-shrink:0; padding:6px 10px; border-radius:8px; border:none; background:#FF7B54; color:#fff; font-size:11px; cursor:pointer; }
+
+  .pin { width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.3); border:2px solid #fff; cursor:pointer; }
+  .pin span { transform:rotate(45deg); font-size:14px; }
+
+  .picker-overlay { position:fixed; inset:0; z-index:50; background:#FDF4EC; display:flex; flex-direction:column; }
+  .picker-overlay.hidden { display:none; }
+  .picker-map { flex:1; position:relative; }
+  .picker-pin { position:absolute; top:50%; left:50%; transform:translate(-50%,-100%); font-size:32px; pointer-events:none; filter:drop-shadow(0 3px 3px rgba(0,0,0,0.3)); z-index:1; }
+  .picker-top { position:absolute; top:0; left:0; right:0; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(rgba(0,0,0,0.35), transparent); z-index:2; }
+  .picker-top span { color:#fff; font-size:12px; }
+  .picker-top button { background:rgba(255,255,255,0.9); border:none; border-radius:999px; width:28px; height:28px; cursor:pointer; }
+  .picker-bottom { padding:14px 20px 24px; display:flex; gap:10px; background:#FDF4EC; }
+  .picker-bottom button { flex-shrink:0; padding:12px 14px; border-radius:12px; border:1px solid #EDE0D2; background:#fff; font-size:13px; cursor:pointer; }
+  .picker-bottom .save { flex:1; border:none; background:#3B2E2A; color:#FDF4EC; font-weight:500; }
 </style>
 </head>
 <body>
@@ -74,33 +97,55 @@
   </div>
 
   <div id="banner"></div>
+
+  <div class="map-wrap">
+    <div id="map"></div>
+    <button class="locate-btn" id="locate-btn" title="내 위치로 이동">📡</button>
+  </div>
+
   <div class="addwrap" id="addwrap"></div>
 
   <div class="filters" id="filters"></div>
   <div class="list" id="list"></div>
 
-  <div class="footnote">지금은 등록·분류·메모·즐겨찾기까지만 되는 단계예요. 실제 지도 위에 핀으로 표시하는 건 다음 단계에서 카카오맵 API로 연동할게요.</div>
+  <div class="footnote" id="footnote"></div>
+</div>
+
+<div class="picker-overlay hidden" id="picker-overlay">
+  <div class="picker-map" id="picker-map"></div>
+  <div class="picker-pin">📍</div>
+  <div class="picker-top">
+    <span>지도를 움직여서 위치를 맞춰주세요</span>
+    <button id="picker-cancel">✕</button>
+  </div>
+  <div class="picker-bottom">
+    <button id="picker-locate">📡 내 위치</button>
+    <button class="save" id="picker-confirm">이 위치로 설정</button>
+  </div>
 </div>
 
 <script>
+const KAKAO_APP_KEY = ""; // TODO: 카카오 디벨로퍼스(developers.kakao.com)에서 발급받은 JavaScript 키를 여기 넣으세요
+
 const TYPES = [
-  { key:"놀곳", color:"#3AAFA9" },
-  { key:"먹을곳", color:"#FF7B54" },
-  { key:"카페", color:"#B98B4E" },
-  { key:"기타", color:"#8C8378" },
+  { key:"놀곳", color:"#3AAFA9", icon:"🛝" },
+  { key:"먹을곳", color:"#FF7B54", icon:"🍽️" },
+  { key:"카페", color:"#B98B4E", icon:"☕" },
+  { key:"기타", color:"#8C8378", icon:"📍" },
 ];
 const AUDIENCES = [
   { key:"아기전용", icon:"👶", color:"#FF7B54" },
   { key:"전연령", icon:"👨‍👩‍👧", color:"#3AAFA9" },
   { key:"어른동반", icon:"🧑", color:"#8C8378" },
 ];
+const SEOUL_CITY_HALL = { lat:37.5665, lng:126.9780 };
 
 const STORAGE_KEY = "baby-place-registry:places";
 let idSeq = 10;
 let places = [
-  { id:1, raw:"https://map.kakao.com/xxxxx", source:"link", name:"몽실놀이터", type:"놀곳", audience:"전연령", memo:"실내라 비 와도 좋음, 주차 넉넉", favorite:true },
-  { id:2, raw:"우리동네 국수집", source:"text", name:"우리동네 국수집", type:"먹을곳", audience:"아기전용", memo:"유아의자 있음, 이유식 데워줌", favorite:false },
-  { id:3, raw:"https://place.map.naver.com/yyyyy", source:"link", name:"라운드어바웃 카페", type:"카페", audience:"어른동반", memo:"아기의자는 없고 유모차 자리 넓음", favorite:false },
+  { id:1, raw:"https://map.kakao.com/xxxxx", source:"link", name:"몽실놀이터", type:"놀곳", audience:"전연령", memo:"실내라 비 와도 좋음, 주차 넉넉", favorite:true, lat:37.5665, lng:126.9780 },
+  { id:2, raw:"우리동네 국수집", source:"text", name:"우리동네 국수집", type:"먹을곳", audience:"아기전용", memo:"유아의자 있음, 이유식 데워줌", favorite:false, lat:37.5651, lng:126.9895 },
+  { id:3, raw:"https://place.map.naver.com/yyyyy", source:"link", name:"라운드어바웃 카페", type:"카페", audience:"어른동반", memo:"아기의자는 없고 유모차 자리 넓음", favorite:false, lat:37.5600, lng:126.9700 },
 ];
 let draft = null;
 let rawInput = "";
@@ -168,7 +213,14 @@ function renderBanner(){
   document.getElementById("save-shared-btn").addEventListener("click", saveSharedToMine);
 }
 
-function renderAll(){ renderBanner(); renderAdd(); renderFilters(); renderList(); }
+function renderFootnote(){
+  const el = document.getElementById("footnote");
+  el.textContent = mapReady
+    ? "지도에 핀이 없는 장소는 목록에서 카드를 탭하면 위치를 지정할 수 있어요."
+    : "지금은 카카오맵 키가 아직 등록되지 않아서 지도가 비어있어요. 등록·분류·메모·즐겨찾기·공유는 그대로 사용할 수 있어요.";
+}
+
+function renderAll(){ renderBanner(); renderFootnote(); renderAdd(); renderFilters(); renderList(); renderMarkers(); }
 
 function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 function detectSource(raw){ return /^https?:\/\//i.test(raw.trim()) ? "link" : "text"; }
@@ -179,6 +231,11 @@ function guessName(raw){
   }
   return raw.trim();
 }
+
+function visiblePlaces(){
+  return places.filter(p => filterType==="전체" ? true : p.type===filterType).filter(p => favOnly ? p.favorite : true);
+}
+function hasLoc(p){ return Number.isFinite(p.lat) && Number.isFinite(p.lng); }
 
 function renderAdd(){
   const el = document.getElementById("addwrap");
@@ -206,12 +263,16 @@ function renderAdd(){
         <label>대상</label>
         <div class="chiprow" id="aud-row"></div>
         <textarea id="draft-memo" rows="2" placeholder="메모 (유아의자 있는지, 주차 등)">${esc(draft.memo)}</textarea>
+        <button type="button" class="locbtn ${draft.lat!=null ? 'set' : ''}" id="loc-btn">${draft.lat!=null ? "📍 위치 수정" : "📍 위치 설정"}</button>
         <button class="save" id="save-btn">등록하기</button>
       </div>`;
     document.getElementById("draft-name").addEventListener("input", e => draft.name = e.target.value);
     document.getElementById("draft-memo").addEventListener("input", e => draft.memo = e.target.value);
     document.getElementById("cancel-btn").addEventListener("click", () => { draft = null; renderAdd(); });
     document.getElementById("save-btn").addEventListener("click", confirmRegister);
+    document.getElementById("loc-btn").addEventListener("click", () => {
+      openPicker(draft.lat!=null ? { lat:draft.lat, lng:draft.lng } : null, loc => { draft.lat = loc.lat; draft.lng = loc.lng; renderAdd(); });
+    });
 
     document.getElementById("type-row").innerHTML = TYPES.map(t => `<div class="chip ${draft.type===t.key?'active':''}" data-t="${t.key}" style="${draft.type===t.key?`background:${t.color};`:''}">${t.key}</div>`).join("");
     document.querySelectorAll("#type-row .chip").forEach(chip => chip.addEventListener("click", () => { draft.type = chip.dataset.t; renderAdd(); }));
@@ -224,7 +285,8 @@ function renderAdd(){
 function startRegister(){
   const raw = rawInput.trim();
   if(!raw) return;
-  draft = { raw, source: detectSource(raw), name: guessName(raw), type:"놀곳", audience:"전연령", memo:"" };
+  const center = mapReady ? currentMapCenter() : null;
+  draft = { raw, source: detectSource(raw), name: guessName(raw), type:"놀곳", audience:"전연령", memo:"", lat: center ? center.lat : undefined, lng: center ? center.lng : undefined };
   rawInput = "";
   renderAdd();
 }
@@ -234,6 +296,7 @@ function confirmRegister(){
   draft = null;
   renderAdd();
   renderList();
+  renderMarkers();
   persist();
 }
 function toggleFav(id){
@@ -246,7 +309,24 @@ function removePlace(id){
   if(isSharedView) return;
   places = places.filter(p => p.id !== id);
   renderList();
+  renderMarkers();
   persist();
+}
+function setLocationFor(id){
+  if(isSharedView) return;
+  const p = places.find(x => x.id===id);
+  openPicker(p && hasLoc(p) ? { lat:p.lat, lng:p.lng } : null, loc => {
+    places = places.map(x => x.id===id ? {...x, lat:loc.lat, lng:loc.lng} : x);
+    renderList();
+    renderMarkers();
+    persist();
+  });
+}
+function onCardClick(id){
+  const p = places.find(x => x.id===id);
+  if(!p) return;
+  if(hasLoc(p)){ focusPlace(id); }
+  else { setLocationFor(id); }
 }
 
 function renderFilters(){
@@ -254,39 +334,154 @@ function renderFilters(){
   const types = ["전체", ...TYPES.map(t=>t.key)];
   el.innerHTML = types.map(t => `<button class="fbtn ${filterType===t?'active':''}" data-t="${t}">${t}</button>`).join("")
     + `<button class="favbtn ${favOnly?'active':''}" id="fav-toggle">⭐</button>`;
-  el.querySelectorAll(".fbtn").forEach(b => b.addEventListener("click", () => { filterType = b.dataset.t; renderFilters(); renderList(); }));
-  document.getElementById("fav-toggle").addEventListener("click", () => { favOnly = !favOnly; renderFilters(); renderList(); });
+  el.querySelectorAll(".fbtn").forEach(b => b.addEventListener("click", () => { filterType = b.dataset.t; renderFilters(); renderList(); renderMarkers(); }));
+  document.getElementById("fav-toggle").addEventListener("click", () => { favOnly = !favOnly; renderFilters(); renderList(); renderMarkers(); });
 }
 
 function renderList(){
   const el = document.getElementById("list");
-  const visible = places.filter(p => filterType==="전체" ? true : p.type===filterType).filter(p => favOnly ? p.favorite : true);
+  const visible = visiblePlaces();
   if(visible.length===0){ el.innerHTML = `<div class="empty">등록된 장소가 없어요.</div>`; return; }
   el.innerHTML = visible.map(p => {
     const typeInfo = TYPES.find(t=>t.key===p.type);
     const audInfo = AUDIENCES.find(a=>a.key===p.audience);
+    const located = hasLoc(p);
     return `
-      <div class="pcard">
+      <div class="pcard" data-id="${p.id}" onclick="onCardClick(${p.id})">
         <div class="pcard-top">
           <div>
             <div class="pcard-meta">
               <span class="badge" style="background:${typeInfo?.color}">${esc(p.type)}</span>
               ${audInfo ? `<span class="aud" style="color:${audInfo.color}">${audInfo.icon} ${audInfo.key}</span>` : ""}
               ${p.source==="link" ? `<span style="font-size:10px;color:#C9BEAE;">🔗</span>` : ""}
+              ${!located && !isSharedView ? `<span class="noloc">📍 위치 미지정 · 탭해서 설정</span>` : ""}
             </div>
             <div class="pname">${esc(p.name)}</div>
             ${p.memo ? `<div class="pmemo">${esc(p.memo)}</div>` : ""}
           </div>
-          <button class="starbtn" ${isSharedView ? "disabled" : `onclick="toggleFav(${p.id})"`}>${p.favorite ? "⭐" : "☆"}</button>
+          <button class="starbtn" ${isSharedView ? "disabled" : `onclick="event.stopPropagation(); toggleFav(${p.id})"`}>${p.favorite ? "⭐" : "☆"}</button>
         </div>
-        ${isSharedView ? "" : `<div class="delrow"><button class="delbtn" onclick="removePlace(${p.id})">삭제</button></div>`}
+        ${isSharedView ? "" : `<div class="delrow"><button class="delbtn" onclick="event.stopPropagation(); removePlace(${p.id})">삭제</button></div>`}
       </div>`;
   }).join("");
 }
 
+/* ---- 지도 (카카오맵) ---- */
+let map = null;
+let mapReady = false;
+let markerOverlays = [];
+let pickerMap = null;
+let pickerCallback = null;
+
+function defaultCenter(){
+  const withLoc = places.find(hasLoc);
+  return withLoc ? { lat:withLoc.lat, lng:withLoc.lng } : SEOUL_CITY_HALL;
+}
+function currentMapCenter(){
+  if(!mapReady) return defaultCenter();
+  const c = map.getCenter();
+  return { lat:c.getLat(), lng:c.getLng() };
+}
+
+function initMapOrFallback(){
+  if(!KAKAO_APP_KEY){ renderMapPlaceholder(false); return; }
+  const script = document.createElement("script");
+  script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false&libraries=services`;
+  script.onload = () => window.kakao.maps.load(initMap);
+  script.onerror = () => renderMapPlaceholder(true);
+  document.head.appendChild(script);
+}
+function renderMapPlaceholder(loadError){
+  document.getElementById("map").innerHTML = `<div class="map-placeholder">${loadError ? "지도를 불러오지 못했어요." : "지도를 표시하려면 카카오 API 키가 필요해요."}<br><span class="mono">index.html 상단의 KAKAO_APP_KEY</span>에 키를 넣어주세요.</div>`;
+}
+function initMap(){
+  const center = defaultCenter();
+  map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(center.lat, center.lng), level: 6 });
+  mapReady = true;
+  renderFootnote();
+  renderMarkers();
+}
+function createMarkerEl(place){
+  const typeInfo = TYPES.find(t => t.key===place.type) || TYPES[TYPES.length-1];
+  const wrap = document.createElement("div");
+  wrap.className = "pin";
+  wrap.style.background = typeInfo.color;
+  wrap.innerHTML = `<span>${typeInfo.icon}</span>`;
+  wrap.title = place.name;
+  wrap.addEventListener("click", () => focusPlace(place.id));
+  return wrap;
+}
+function renderMarkers(){
+  if(!mapReady) return;
+  markerOverlays.forEach(o => o.setMap(null));
+  markerOverlays = [];
+  visiblePlaces().filter(hasLoc).forEach(p => {
+    const el = createMarkerEl(p);
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(p.lat, p.lng),
+      content: el,
+      yAnchor: 1
+    });
+    overlay.setMap(map);
+    markerOverlays.push(overlay);
+  });
+}
+function focusPlace(id){
+  const p = places.find(x => x.id===id);
+  if(!p || !hasLoc(p)) return;
+  if(mapReady){
+    map.setLevel(4);
+    map.panTo(new kakao.maps.LatLng(p.lat, p.lng));
+  }
+  const card = document.querySelector(`.pcard[data-id="${id}"]`);
+  if(card){
+    card.scrollIntoView({ behavior:"smooth", block:"center" });
+    card.classList.add("highlight");
+    setTimeout(() => card.classList.remove("highlight"), 1200);
+  }
+}
+
+function openPicker(initial, onConfirm){
+  if(!mapReady){ alert("아직 지도 키가 등록되지 않아서 위치를 지정할 수 없어요. 카카오 키를 추가하면 사용할 수 있어요."); return; }
+  pickerCallback = onConfirm;
+  const c = initial && initial.lat!=null ? initial : defaultCenter();
+  document.getElementById("picker-overlay").classList.remove("hidden");
+  requestAnimationFrame(() => {
+    if(!pickerMap){
+      pickerMap = new kakao.maps.Map(document.getElementById("picker-map"), { center: new kakao.maps.LatLng(c.lat, c.lng), level: 4 });
+    } else {
+      pickerMap.relayout();
+      pickerMap.setCenter(new kakao.maps.LatLng(c.lat, c.lng));
+    }
+  });
+}
+function closePicker(){ document.getElementById("picker-overlay").classList.add("hidden"); }
+
+document.getElementById("picker-cancel").addEventListener("click", closePicker);
+document.getElementById("picker-confirm").addEventListener("click", () => {
+  if(!pickerMap) return;
+  const c = pickerMap.getCenter();
+  const loc = { lat:c.getLat(), lng:c.getLng() };
+  closePicker();
+  if(pickerCallback) pickerCallback(loc);
+});
+document.getElementById("picker-locate").addEventListener("click", () => {
+  if(!navigator.geolocation || !pickerMap) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    pickerMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+  });
+});
+document.getElementById("locate-btn").addEventListener("click", () => {
+  if(!navigator.geolocation || !mapReady) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    map.panTo(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+  });
+});
+
 loadInitialState();
 document.getElementById("share-btn").addEventListener("click", shareList);
 renderAll();
+initMapOrFallback();
 </script>
 </body>
 </html>
