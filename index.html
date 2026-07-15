@@ -139,7 +139,7 @@
 const KAKAO_APP_KEY = "391b39ae5de6f3152db3258ae09cd86b";
 
 const TYPES = [
-  { key:"놀곳", color:"#3AAFA9", icon:"🛝" },
+  { key:"놀곳", color:"#3AAFA9", icon:"🎠" },
   { key:"먹을곳", color:"#FF7B54", icon:"🍽️" },
   { key:"카페", color:"#B98B4E", icon:"☕" },
   { key:"기타", color:"#8C8378", icon:"📍" },
@@ -260,6 +260,7 @@ function renderAdd(){
   const el = document.getElementById("addwrap");
   if(isSharedView){ el.innerHTML = ""; return; }
   if(draft){ renderDraftForm(el); return; }
+  clearDraftPreview();
   if(mapReady && addMode === "search"){ renderSearchBox(el); return; }
   renderManualBox(el);
 }
@@ -352,6 +353,7 @@ function draftSourceLabel(){
 }
 
 function renderDraftForm(el){
+  showDraftPreview();
   el.innerHTML = `
     <div class="draft">
       <div class="draft-top">
@@ -475,6 +477,27 @@ let mapReady = false;
 let markerOverlays = [];
 let pickerMap = null;
 let pickerCallback = null;
+let draftPreviewOverlay = null;
+
+function showDraftPreview(){
+  if(!mapReady || !draft || !hasLoc(draft)) return;
+  clearDraftPreview();
+  map.setLevel(4);
+  map.panTo(new kakao.maps.LatLng(draft.lat, draft.lng));
+  const el = document.createElement("div");
+  el.className = "pin";
+  el.style.background = "#3B2E2A";
+  el.innerHTML = `<span>📍</span>`;
+  draftPreviewOverlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(draft.lat, draft.lng),
+    content: el,
+    yAnchor: 1
+  });
+  draftPreviewOverlay.setMap(map);
+}
+function clearDraftPreview(){
+  if(draftPreviewOverlay){ draftPreviewOverlay.setMap(null); draftPreviewOverlay = null; }
+}
 
 function defaultCenter(){
   const withLoc = places.find(hasLoc);
